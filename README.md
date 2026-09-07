@@ -52,7 +52,7 @@ Stock and price live on the SKU. Cut tape and full reel of the same part can hav
 
 ## Cart and orders
 
-Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is reserved on checkout and deducted when the order is marked paid.
+Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is reserved on checkout, deducted when paid, and released if the unpaid order is cancelled.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -63,4 +63,6 @@ Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is
 | DELETE | `/api/users/{id}/cart/items/{itemId}` | Remove cart line |
 | POST | `/api/users/{id}/checkout` | Create order, reserve stock |
 | GET | `/api/orders/{id}` | Get order |
+| GET | `/api/users/{id}/orders` | List user orders |
 | POST | `/api/orders/{id}/pay` | Manual payment, capture stock |
+| POST | `/api/orders/{id}/cancel` | Cancel unpaid order, release stock |

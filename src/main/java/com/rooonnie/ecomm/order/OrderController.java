@@ -50,4 +50,10 @@ public class OrderController {
     public OrderResponse pay(@PathVariable Long id) {
         return orderService.pay(id);
     }
+
+    @PostMapping("/api/orders/{id}/cancel")
+    @Operation(summary = "Cancel unpaid order and release reserved stock")
+    public OrderResponse cancel(@PathVariable Long id) {
+        return orderService.cancel(id);
+    }
 }

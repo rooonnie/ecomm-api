@@ -110,10 +110,7 @@ public class OrderService {
 
     @Transactional
     public OrderResponse pay(Long orderId) {
-        ShopOrder order = getById(orderId);
-        if (order.getStatus() == OrderStatus.PAID) {
-            throw new ConflictException("Order already paid: " + order.getOrderNo());
-        }
+        ShopOrder order = requirePendingPayment(orderId);
         for (OrderItem item : order.getItems()) {
             inventoryService.capture(item.getSku().getId(), item.getQty());
         }
@@ -122,6 +119,28 @@ public class OrderService {
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaidAt(Instant.now());
         return toResponse(shopOrderRepository.save(order));
+    }
+
+    @Transactional
+    public OrderResponse cancel(Long orderId) {
+        ShopOrder order = requirePendingPayment(orderId);
+        for (OrderItem item : order.getItems()) {
+            inventoryService.release(item.getSku().getId(), item.getQty());
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+        Payment payment = order.getPayment();
+        payment.setStatus(PaymentStatus.CANCELLED);
+        return toResponse(shopOrderRepository.save(order));
+    }
+
+    private ShopOrder requirePendingPayment(Long orderId) {
+        ShopOrder order = getById(orderId);
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new ConflictException(
+                    "Order " + order.getOrderNo() + " cannot change; status is " + order.getStatus()
+            );
+        }
+        return order;
     }
 
     private ShopOrder getById(Long id) {

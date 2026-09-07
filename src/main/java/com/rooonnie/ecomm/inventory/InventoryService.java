@@ -48,6 +48,16 @@ public class InventoryService {
     }
 
     @Transactional
+    public void release(Long skuId, int qty) {
+        Inventory inventory = requireBySkuId(skuId);
+        if (inventory.getQtyReserved() < qty) {
+            throw new BadRequestException("Cannot release more than reserved qty for SKU " + skuId);
+        }
+        inventory.setQtyReserved(inventory.getQtyReserved() - qty);
+        inventoryRepository.save(inventory);
+    }
+
+    @Transactional
     public void capture(Long skuId, int qty) {
         Inventory inventory = requireBySkuId(skuId);
         if (inventory.getQtyReserved() < qty) {

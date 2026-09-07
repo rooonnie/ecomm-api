@@ -124,6 +124,111 @@ class CheckoutApiTest {
                 .andExpect(jsonPath("$.qtyOnHand").value(100))
                 .andExpect(jsonPath("$.qtyReserved").value(0))
                 .andExpect(jsonPath("$.qtyAvailable").value(100));
+
+        mockMvc.perform(post("/api/orders/" + orderId + "/cancel"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void cancelPendingOrderReleasesReservedStock() throws Exception {
+        long categoryId = id(getJson("/api/categories"));
+        long manufacturerId = id(getJson("/api/manufacturers"));
+        long cutTapeId = idByCode(getJson("/api/packaging-types"), "CUT_TAPE");
+
+        long productId = id(mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "mpn": "RC0603FR-07220KL",
+                                  "manufacturerId": %d,
+                                  "categoryId": %d,
+                                  "name": "220 kOhm 0603 chip resistor",
+                                  "packageCase": "0603",
+                                  "lifecycle": "ACTIVE"
+                                }
+                                """.formatted(manufacturerId, categoryId)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString());
+
+        long skuId = id(mockMvc.perform(post("/api/skus")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "productId": %d,
+                                  "packagingTypeId": %d,
+                                  "skuCode": "RC0603-220K-CT",
+                                  "qtyPerPack": 1,
+                                  "moq": 10,
+                                  "status": "ACTIVE"
+                                }
+                                """.formatted(productId, cutTapeId)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString());
+
+        mockMvc.perform(put("/api/skus/" + skuId + "/inventory")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"qtyOnHand\": 250}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/skus/" + skuId + "/price-breaks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "breaks": [
+                                    {"minQty": 1, "unitPrice": 2.50},
+                                    {"minQty": 100, "unitPrice": 1.10}
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        long userId = id(mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"cancel-buyer@example.com\",\"name\":\"Cancel Buyer\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString());
+
+        long addressId = id(mockMvc.perform(post("/api/users/" + userId + "/addresses")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "line1": "123 Test St",
+                                  "city": "Manila",
+                                  "country": "PH",
+                                  "postal": "1000"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString());
+
+        mockMvc.perform(post("/api/users/" + userId + "/cart/items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"skuId\": %d, \"qty\": 150}".formatted(skuId)))
+                .andExpect(status().isOk());
+
+        long orderId = id(mockMvc.perform(post("/api/users/" + userId + "/checkout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"addressId\": %d}".formatted(addressId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
+                .andReturn().getResponse().getContentAsString());
+
+        mockMvc.perform(post("/api/orders/" + orderId + "/cancel"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.payment.status").value("CANCELLED"));
+
+        mockMvc.perform(get("/api/skus/" + skuId + "/inventory"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.qtyOnHand").value(250))
+                .andExpect(jsonPath("$.qtyReserved").value(0))
+                .andExpect(jsonPath("$.qtyAvailable").value(250));
+
+        mockMvc.perform(post("/api/orders/" + orderId + "/cancel"))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(post("/api/orders/" + orderId + "/pay"))
+                .andExpect(status().isConflict());
     }
 
     private String getJson(String path) throws Exception {
