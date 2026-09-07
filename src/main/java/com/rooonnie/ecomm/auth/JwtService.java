@@ -1,6 +1,7 @@
 package com.rooonnie.ecomm.auth;
 
 import com.rooonnie.ecomm.customer.Customer;
+import com.rooonnie.ecomm.customer.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -30,6 +31,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(String.valueOf(customer.getId()))
                 .claim("email", customer.getEmail())
+                .claim("role", customer.getRole().name())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(expirationMs)))
                 .signWith(key)
@@ -42,6 +44,8 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return new AuthPrincipal(Long.parseLong(claims.getSubject()), claims.get("email", String.class));
+        String roleName = claims.get("role", String.class);
+        UserRole role = roleName == null ? UserRole.CUSTOMER : UserRole.valueOf(roleName);
+        return new AuthPrincipal(Long.parseLong(claims.getSubject()), claims.get("email", String.class), role);
     }
 }

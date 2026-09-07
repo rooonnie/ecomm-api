@@ -2,6 +2,8 @@ package com.rooonnie.ecomm.customer;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,13 +26,18 @@ public class Customer {
     @Column(name = "password_hash", length = 100)
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserRole role = UserRole.CUSTOMER;
+
     public Customer() {
     }
 
-    public Customer(String email, String name, String passwordHash) {
+    public Customer(String email, String name, String passwordHash, UserRole role) {
         this.email = email;
         this.name = name;
         this.passwordHash = passwordHash;
+        this.role = role;
     }
 
     public Long getId() {
@@ -59,5 +66,13 @@ public class Customer {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public UserRole getRole() {
+        return role == null ? UserRole.CUSTOMER : role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
     }
 }

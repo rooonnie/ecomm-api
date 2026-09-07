@@ -6,10 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.rooonnie.ecomm.support.TestAuth;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -46,7 +48,10 @@ class CatalogApiTest {
                 "TAPE_AND_REEL"
         );
 
+        String admin = TestAuth.adminToken(mockMvc);
+
         MvcResult productResult = mockMvc.perform(post("/api/products")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -65,6 +70,7 @@ class CatalogApiTest {
         long productId = extractId(productResult.getResponse().getContentAsString());
 
         mockMvc.perform(post("/api/skus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -80,6 +86,7 @@ class CatalogApiTest {
                 .andExpect(jsonPath("$.packagingCode").value("CUT_TAPE"));
 
         mockMvc.perform(post("/api/skus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -100,6 +107,7 @@ class CatalogApiTest {
                 .andExpect(jsonPath("$.length()").value(2));
 
         mockMvc.perform(post("/api/products/" + productId + "/images")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -112,6 +120,7 @@ class CatalogApiTest {
                 .andExpect(jsonPath("$.url").value("https://cdn.example.com/rc0603-front.jpg"));
 
         mockMvc.perform(post("/api/products/" + productId + "/images")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

@@ -28,6 +28,7 @@ class AuthApiTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.user.email").value("auth-one@example.com"))
+                .andExpect(jsonPath("$.user.role").value("CUSTOMER"))
                 .andReturn().getResponse().getContentAsString();
         long userId = id(registered);
         String token = bearerToken(registered);
@@ -60,6 +61,21 @@ class AuthApiTest {
 
         mockMvc.perform(get("/api/users/" + otherId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/products")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "mpn": "RC0603FR-ADMIN1",
+                                  "manufacturerId": 1,
+                                  "categoryId": 1,
+                                  "name": "blocked",
+                                  "packageCase": "0603",
+                                  "lifecycle": "ACTIVE"
+                                }
+                                """))
                 .andExpect(status().isForbidden());
     }
 

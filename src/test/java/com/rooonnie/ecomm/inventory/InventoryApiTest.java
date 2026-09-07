@@ -6,10 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.rooonnie.ecomm.support.TestAuth;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,7 +31,10 @@ class InventoryApiTest {
                 "CUT_TAPE"
         );
 
+        String admin = TestAuth.adminToken(mockMvc);
+
         long productId = extractFirstId(mockMvc.perform(post("/api/products")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -47,6 +52,7 @@ class InventoryApiTest {
                 .getContentAsString());
 
         long skuId = extractFirstId(mockMvc.perform(post("/api/skus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -69,6 +75,7 @@ class InventoryApiTest {
                 .andExpect(jsonPath("$.qtyAvailable").value(0));
 
         mockMvc.perform(put("/api/skus/" + skuId + "/inventory")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"qtyOnHand\": 250}"))
                 .andExpect(status().isOk())
@@ -76,6 +83,7 @@ class InventoryApiTest {
                 .andExpect(jsonPath("$.qtyAvailable").value(250));
 
         mockMvc.perform(put("/api/skus/" + skuId + "/price-breaks")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

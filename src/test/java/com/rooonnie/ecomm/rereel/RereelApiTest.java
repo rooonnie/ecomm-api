@@ -15,6 +15,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.rooonnie.ecomm.support.TestAuth;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class RereelApiTest {
@@ -29,7 +31,10 @@ class RereelApiTest {
         long cutTapeId = idByCode(getJson("/api/packaging-types"), "CUT_TAPE");
         long miniReelId = idByCode(getJson("/api/packaging-types"), "MINI_REEL");
 
+        String admin = TestAuth.adminToken(mockMvc);
+
         long productId = id(mockMvc.perform(post("/api/products")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -45,6 +50,7 @@ class RereelApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         long sourceSkuId = id(mockMvc.perform(post("/api/skus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -60,6 +66,7 @@ class RereelApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         mockMvc.perform(put("/api/skus/" + sourceSkuId + "/inventory")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"qtyOnHand\": 250}"))
                 .andExpect(status().isOk());
@@ -122,7 +129,10 @@ class RereelApiTest {
         long cutTapeId = idByCode(getJson("/api/packaging-types"), "CUT_TAPE");
         long rereelId = idByCode(getJson("/api/packaging-types"), "REREEL");
 
+        String admin = TestAuth.adminToken(mockMvc);
+
         long productId = id(mockMvc.perform(post("/api/products")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -138,6 +148,7 @@ class RereelApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         long sourceSkuId = id(mockMvc.perform(post("/api/skus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -153,6 +164,7 @@ class RereelApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         mockMvc.perform(put("/api/skus/" + sourceSkuId + "/inventory")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"qtyOnHand\": 250}"))
                 .andExpect(status().isOk());

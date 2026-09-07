@@ -14,6 +14,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.rooonnie.ecomm.support.TestAuth;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class CheckoutApiTest {
@@ -27,7 +29,10 @@ class CheckoutApiTest {
         long manufacturerId = id(getJson("/api/manufacturers"));
         long cutTapeId = idByCode(getJson("/api/packaging-types"), "CUT_TAPE");
 
+        String admin = TestAuth.adminToken(mockMvc);
+
         long productId = id(mockMvc.perform(post("/api/products")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -43,6 +48,7 @@ class CheckoutApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         long skuId = id(mockMvc.perform(post("/api/skus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -58,11 +64,13 @@ class CheckoutApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         mockMvc.perform(put("/api/skus/" + skuId + "/inventory")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"qtyOnHand\": 250}"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(put("/api/skus/" + skuId + "/price-breaks")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -143,7 +151,10 @@ class CheckoutApiTest {
         long manufacturerId = id(getJson("/api/manufacturers"));
         long cutTapeId = idByCode(getJson("/api/packaging-types"), "CUT_TAPE");
 
+        String admin = TestAuth.adminToken(mockMvc);
+
         long productId = id(mockMvc.perform(post("/api/products")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -159,6 +170,7 @@ class CheckoutApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         long skuId = id(mockMvc.perform(post("/api/skus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -174,11 +186,13 @@ class CheckoutApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         mockMvc.perform(put("/api/skus/" + skuId + "/inventory")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"qtyOnHand\": 250}"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(put("/api/skus/" + skuId + "/price-breaks")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

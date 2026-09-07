@@ -12,3 +12,7 @@ ecomm:
   jwt:
     secret: "ecomm-api-test-jwt-secret-key-min-32b"
     expiration-ms: 3600000
+  admin:
+    email: admin@ecomm.local
+    password: adminpass1
+    name: Admin

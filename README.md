@@ -54,16 +54,21 @@ Stock and price live on the SKU. Cut tape and full reel of the same part can hav
 
 ## Auth
 
-Cart, orders, and rereel jobs require a JWT. Catalog and inventory stay open for now.
+Cart, orders, and rereel jobs require a customer JWT. Catalog **writes** (create product, SKU, stock, prices, images) require an **admin** JWT. Catalog reads stay public.
 
-1. `POST /api/auth/register` with email, name, password (min 8 chars)
+Seeded admin (change in production):
+
+- Email: `admin@ecomm.local`
+- Password: `adminpass1`
+
+1. `POST /api/auth/login` as admin, or `POST /api/auth/register` for a customer
 2. Copy `token` from the response
 3. In Swagger click **Authorize**, paste the token (no `Bearer` prefix)
-4. Call cart / checkout / rereel
+4. Admin: add parts / stock. Customer: cart / checkout / rereel
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| POST | `/api/auth/register` | Create customer and return JWT |
+| POST | `/api/auth/register` | Create customer (`CUSTOMER` role) and return JWT |
 | POST | `/api/auth/login` | Login and return JWT |
 
 Old `POST /api/users` still creates a customer if you send a password, but it does not return a token. Use register, then login.

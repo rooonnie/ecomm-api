@@ -1,4 +1,6 @@
 package com.rooonnie.ecomm.auth;
 
-public record AuthPrincipal(Long userId, String email) {
+import com.rooonnie.ecomm.customer.UserRole;
+
+public record AuthPrincipal(Long userId, String email, UserRole role) {
 }

@@ -53,13 +53,20 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/h2-console/**"
                         ).permitAll()
-                        .requestMatchers(
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/packaging-types/**",
                                 "/api/categories/**",
                                 "/api/manufacturers/**",
                                 "/api/products/**",
                                 "/api/skus/**"
                         ).permitAll()
+                        .requestMatchers(
+                                "/api/packaging-types/**",
+                                "/api/categories/**",
+                                "/api/manufacturers/**",
+                                "/api/products/**",
+                                "/api/skus/**"
+                        ).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers("/api/users/**", "/api/orders/**", "/api/rereel-jobs/**").authenticated()
                         .anyRequest().authenticated()

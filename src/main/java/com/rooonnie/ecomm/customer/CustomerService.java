@@ -35,7 +35,7 @@ public class CustomerService {
             throw new ConflictException("Email already exists: " + email);
         }
         Customer saved = customerRepository.save(
-                new Customer(email, request.name().trim(), passwordEncoder.encode(request.password()))
+                new Customer(email, request.name().trim(), passwordEncoder.encode(request.password()), UserRole.CUSTOMER)
         );
         return CustomerResponse.from(saved);
     }
