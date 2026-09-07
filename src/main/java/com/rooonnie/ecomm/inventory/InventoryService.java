@@ -58,6 +58,16 @@ public class InventoryService {
     }
 
     @Transactional
+    public void addOnHand(Long skuId, int qty) {
+        if (qty < 1) {
+            throw new BadRequestException("qty to add must be at least 1");
+        }
+        Inventory inventory = requireBySkuId(skuId);
+        inventory.setQtyOnHand(inventory.getQtyOnHand() + qty);
+        inventoryRepository.save(inventory);
+    }
+
+    @Transactional
     public void capture(Long skuId, int qty) {
         Inventory inventory = requireBySkuId(skuId);
         if (inventory.getQtyReserved() < qty) {

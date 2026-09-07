@@ -66,3 +66,14 @@ Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is
 | GET | `/api/users/{id}/orders` | List user orders |
 | POST | `/api/orders/{id}/pay` | Manual payment, capture stock |
 | POST | `/api/orders/{id}/cancel` | Cancel unpaid order, release stock |
+
+## Rereel jobs
+
+Cut tape leftover can be wound onto a mini-reel or rereel. Source stock is reserved when the job is created. Completing the job consumes cut tape and adds the same qty to a target SKU of the same part (created if it does not exist yet).
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET/POST | `/api/rereel-jobs` | List / request a rereel job |
+| GET | `/api/rereel-jobs/{id}` | Get job |
+| POST | `/api/rereel-jobs/{id}/complete` | Consume cut tape, add mini-reel stock |
+| POST | `/api/rereel-jobs/{id}/cancel` | Cancel job, release reserved cut tape |

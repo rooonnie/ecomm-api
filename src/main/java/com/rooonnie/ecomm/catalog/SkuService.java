@@ -67,4 +67,41 @@ public class SkuService {
         return skuRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SKU not found: " + id));
     }
+
+    @Transactional
+    public Sku findOrCreateForPackaging(Sku source, PackagingType targetPackaging, String reelSize) {
+        return skuRepository
+                .findFirstByProductIdAndPackagingTypeId(source.getProduct().getId(), targetPackaging.getId())
+                .orElseGet(() -> createCompanionSku(source, targetPackaging, reelSize));
+    }
+
+    private Sku createCompanionSku(Sku source, PackagingType targetPackaging, String reelSize) {
+        String base = (source.getSkuCode() + "-" + packagingSuffix(targetPackaging.getCode())).toUpperCase();
+        String skuCode = base;
+        int suffix = 2;
+        while (skuRepository.existsBySkuCode(skuCode)) {
+            skuCode = base + "-" + suffix;
+            suffix++;
+        }
+
+        Sku sku = new Sku();
+        sku.setProduct(source.getProduct());
+        sku.setPackagingType(targetPackaging);
+        sku.setSkuCode(skuCode);
+        sku.setQtyPerPack(1);
+        sku.setReelSize(reelSize);
+        sku.setMoq(1);
+        sku.setStatus(SkuStatus.ACTIVE);
+        Sku saved = skuRepository.save(sku);
+        inventoryRepository.save(new Inventory(saved));
+        return saved;
+    }
+
+    private static String packagingSuffix(String packagingCode) {
+        return switch (packagingCode) {
+            case "MINI_REEL" -> "MR";
+            case "REREEL" -> "RR";
+            default -> packagingCode;
+        };
+    }
 }

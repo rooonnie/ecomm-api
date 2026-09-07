@@ -35,7 +35,7 @@ public class PackagingTypeService {
         return PackagingTypeResponse.from(saved);
     }
 
-    PackagingType getById(Long id) {
+    public PackagingType getById(Long id) {
         return packagingTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Packaging type not found: " + id));
     }
