@@ -34,6 +34,43 @@ public class InventoryService {
         return InventoryResponse.from(inventoryRepository.save(inventory));
     }
 
+    @Transactional
+    public void reserve(Long skuId, int qty) {
+        Inventory inventory = requireBySkuId(skuId);
+        if (inventory.available() < qty) {
+            throw new BadRequestException(
+                    "Insufficient stock for SKU " + inventory.getSku().getSkuCode()
+                            + ": available " + inventory.available() + ", requested " + qty
+            );
+        }
+        inventory.setQtyReserved(inventory.getQtyReserved() + qty);
+        inventoryRepository.save(inventory);
+    }
+
+    @Transactional
+    public void capture(Long skuId, int qty) {
+        Inventory inventory = requireBySkuId(skuId);
+        if (inventory.getQtyReserved() < qty) {
+            throw new BadRequestException("Cannot capture more than reserved qty for SKU " + skuId);
+        }
+        if (inventory.getQtyOnHand() < qty) {
+            throw new BadRequestException("Cannot capture more than on-hand qty for SKU " + skuId);
+        }
+        inventory.setQtyOnHand(inventory.getQtyOnHand() - qty);
+        inventory.setQtyReserved(inventory.getQtyReserved() - qty);
+        inventoryRepository.save(inventory);
+    }
+
+    public void assertAvailable(Long skuId, int qty) {
+        Inventory inventory = requireBySkuId(skuId);
+        if (inventory.available() < qty) {
+            throw new BadRequestException(
+                    "Insufficient stock for SKU " + inventory.getSku().getSkuCode()
+                            + ": available " + inventory.available() + ", requested " + qty
+            );
+        }
+    }
+
     private Inventory requireBySkuId(Long skuId) {
         Sku sku = skuService.getById(skuId);
         return inventoryRepository.findBySkuId(sku.getId()).orElseGet(() -> inventoryRepository.save(new Inventory(sku)));

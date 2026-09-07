@@ -49,3 +49,18 @@ Seeded on startup:
 | GET | `/api/skus/{skuId}/price-breaks/quote?qty=` | Unit price for a qty |
 
 Stock and price live on the SKU. Cut tape and full reel of the same part can have different qty and different price breaks.
+
+## Cart and orders
+
+Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is reserved on checkout and deducted when the order is marked paid.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST/GET | `/api/users` | Create / get customer |
+| GET/POST | `/api/users/{id}/addresses` | Shipping addresses |
+| GET | `/api/users/{id}/cart` | Get or create cart |
+| POST | `/api/users/{id}/cart/items` | Add SKU + qty |
+| DELETE | `/api/users/{id}/cart/items/{itemId}` | Remove cart line |
+| POST | `/api/users/{id}/checkout` | Create order, reserve stock |
+| GET | `/api/orders/{id}` | Get order |
+| POST | `/api/orders/{id}/pay` | Manual payment, capture stock |
