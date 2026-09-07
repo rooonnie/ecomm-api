@@ -1,8 +1,10 @@
 package com.rooonnie.ecomm.customer;
 
+import com.rooonnie.ecomm.auth.AuthGuard;
 import com.rooonnie.ecomm.common.ConflictException;
 import com.rooonnie.ecomm.common.ResourceNotFoundException;
 import java.util.List;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,10 +13,19 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final AddressRepository addressRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthGuard authGuard;
 
-    public CustomerService(CustomerRepository customerRepository, AddressRepository addressRepository) {
+    public CustomerService(
+            CustomerRepository customerRepository,
+            AddressRepository addressRepository,
+            PasswordEncoder passwordEncoder,
+            AuthGuard authGuard
+    ) {
         this.customerRepository = customerRepository;
         this.addressRepository = addressRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authGuard = authGuard;
     }
 
     @Transactional
@@ -23,17 +34,21 @@ public class CustomerService {
         if (customerRepository.existsByEmail(email)) {
             throw new ConflictException("Email already exists: " + email);
         }
-        Customer saved = customerRepository.save(new Customer(email, request.name().trim()));
+        Customer saved = customerRepository.save(
+                new Customer(email, request.name().trim(), passwordEncoder.encode(request.password()))
+        );
         return CustomerResponse.from(saved);
     }
 
     @Transactional(readOnly = true)
     public CustomerResponse findById(Long id) {
+        authGuard.requireUser(id);
         return CustomerResponse.from(getById(id));
     }
 
     @Transactional
     public AddressResponse addAddress(Long userId, AddressRequest request) {
+        authGuard.requireUser(userId);
         Customer customer = getById(userId);
         Address address = new Address();
         address.setCustomer(customer);
@@ -47,6 +62,7 @@ public class CustomerService {
 
     @Transactional(readOnly = true)
     public List<AddressResponse> listAddresses(Long userId) {
+        authGuard.requireUser(userId);
         getById(userId);
         return addressRepository.findByCustomerId(userId).stream().map(AddressResponse::from).toList();
     }

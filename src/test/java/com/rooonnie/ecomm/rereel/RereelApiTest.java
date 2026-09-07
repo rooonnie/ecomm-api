@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -63,7 +64,10 @@ class RereelApiTest {
                         .content("{\"qtyOnHand\": 250}"))
                 .andExpect(status().isOk());
 
+        String token = bearerToken(register("rereel-complete@example.com", "Rereel User"));
+
         long jobId = id(mockMvc.perform(post("/api/rereel-jobs")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -86,7 +90,8 @@ class RereelApiTest {
                 .andExpect(jsonPath("$.qtyReserved").value(100))
                 .andExpect(jsonPath("$.qtyAvailable").value(150));
 
-        String completed = mockMvc.perform(post("/api/rereel-jobs/" + jobId + "/complete"))
+        String completed = mockMvc.perform(post("/api/rereel-jobs/" + jobId + "/complete")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.targetSkuCode").value("RC0603-5K11-CT-MR"))
@@ -105,7 +110,8 @@ class RereelApiTest {
                 .andExpect(jsonPath("$.qtyReserved").value(0))
                 .andExpect(jsonPath("$.qtyAvailable").value(100));
 
-        mockMvc.perform(post("/api/rereel-jobs/" + jobId + "/complete"))
+        mockMvc.perform(post("/api/rereel-jobs/" + jobId + "/complete")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isConflict());
     }
 
@@ -151,7 +157,10 @@ class RereelApiTest {
                         .content("{\"qtyOnHand\": 250}"))
                 .andExpect(status().isOk());
 
+        String token = bearerToken(register("rereel-cancel@example.com", "Rereel Cancel"));
+
         long jobId = id(mockMvc.perform(post("/api/rereel-jobs")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -163,7 +172,8 @@ class RereelApiTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString());
 
-        mockMvc.perform(post("/api/rereel-jobs/" + jobId + "/cancel"))
+        mockMvc.perform(post("/api/rereel-jobs/" + jobId + "/cancel")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
 
@@ -173,8 +183,22 @@ class RereelApiTest {
                 .andExpect(jsonPath("$.qtyReserved").value(0))
                 .andExpect(jsonPath("$.qtyAvailable").value(250));
 
-        mockMvc.perform(post("/api/rereel-jobs/" + jobId + "/cancel"))
+        mockMvc.perform(post("/api/rereel-jobs/" + jobId + "/cancel")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isConflict());
+    }
+
+    private String register(String email, String name) throws Exception {
+        return mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"name\":\"%s\",\"password\":\"password1\"}".formatted(email, name)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+    }
+
+    private static String bearerToken(String json) {
+        int start = json.indexOf("\"token\":\"") + 9;
+        return json.substring(start, json.indexOf('"', start));
     }
 
     private String getJson(String path) throws Exception {

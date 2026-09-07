@@ -21,12 +21,16 @@ public class Customer {
     @Column(nullable = false, length = 120)
     private String name;
 
+    @Column(name = "password_hash", length = 100)
+    private String passwordHash;
+
     public Customer() {
     }
 
-    public Customer(String email, String name) {
+    public Customer(String email, String name, String passwordHash) {
         this.email = email;
         this.name = name;
+        this.passwordHash = passwordHash;
     }
 
     public Long getId() {
@@ -47,5 +51,13 @@ public class Customer {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }

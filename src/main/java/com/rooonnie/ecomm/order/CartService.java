@@ -3,6 +3,7 @@ package com.rooonnie.ecomm.order;
 import com.rooonnie.ecomm.catalog.Sku;
 import com.rooonnie.ecomm.catalog.SkuService;
 import com.rooonnie.ecomm.catalog.SkuStatus;
+import com.rooonnie.ecomm.auth.AuthGuard;
 import com.rooonnie.ecomm.common.BadRequestException;
 import com.rooonnie.ecomm.common.ResourceNotFoundException;
 import com.rooonnie.ecomm.customer.Customer;
@@ -25,6 +26,7 @@ public class CartService {
     private final SkuService skuService;
     private final PriceBreakService priceBreakService;
     private final InventoryService inventoryService;
+    private final AuthGuard authGuard;
 
     public CartService(
             CartRepository cartRepository,
@@ -32,7 +34,8 @@ public class CartService {
             CustomerService customerService,
             SkuService skuService,
             PriceBreakService priceBreakService,
-            InventoryService inventoryService
+            InventoryService inventoryService,
+            AuthGuard authGuard
     ) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
@@ -40,6 +43,7 @@ public class CartService {
         this.skuService = skuService;
         this.priceBreakService = priceBreakService;
         this.inventoryService = inventoryService;
+        this.authGuard = authGuard;
     }
 
     @Transactional
@@ -82,6 +86,7 @@ public class CartService {
     }
 
     Cart requireCart(Long userId) {
+        authGuard.requireUser(userId);
         Customer customer = customerService.getById(userId);
         return cartRepository.findByCustomerId(userId).orElseGet(() -> cartRepository.save(new Cart(customer)));
     }

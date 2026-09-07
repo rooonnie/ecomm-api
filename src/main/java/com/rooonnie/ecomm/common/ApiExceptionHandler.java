@@ -25,6 +25,18 @@ public class ApiExceptionHandler {
         return new ErrorResponse("CONFLICT", ex.getMessage());
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse unauthorized(UnauthorizedException ex) {
+        return new ErrorResponse("UNAUTHORIZED", ex.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse forbidden(ForbiddenException ex) {
+        return new ErrorResponse("FORBIDDEN", ex.getMessage());
+    }
+
     @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse badRequest(BadRequestException ex) {

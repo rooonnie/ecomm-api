@@ -27,3 +27,8 @@ springdoc:
 
 server:
   port: 8080
+
+ecomm:
+  jwt:
+    secret: "ecomm-api-local-jwt-secret-key-min-32b"
+    expiration-ms: 86400000

@@ -1,6 +1,7 @@
 package com.rooonnie.ecomm.order;
 
 import com.rooonnie.ecomm.catalog.Sku;
+import com.rooonnie.ecomm.auth.AuthGuard;
 import com.rooonnie.ecomm.common.BadRequestException;
 import com.rooonnie.ecomm.common.ConflictException;
 import com.rooonnie.ecomm.common.ResourceNotFoundException;
@@ -26,23 +27,27 @@ public class OrderService {
     private final CustomerService customerService;
     private final PriceBreakService priceBreakService;
     private final InventoryService inventoryService;
+    private final AuthGuard authGuard;
 
     public OrderService(
             ShopOrderRepository shopOrderRepository,
             CartService cartService,
             CustomerService customerService,
             PriceBreakService priceBreakService,
-            InventoryService inventoryService
+            InventoryService inventoryService,
+            AuthGuard authGuard
     ) {
         this.shopOrderRepository = shopOrderRepository;
         this.cartService = cartService;
         this.customerService = customerService;
         this.priceBreakService = priceBreakService;
         this.inventoryService = inventoryService;
+        this.authGuard = authGuard;
     }
 
     @Transactional
     public OrderResponse checkout(Long userId, CheckoutRequest request) {
+        authGuard.requireUser(userId);
         Customer customer = customerService.getById(userId);
         Address address = customerService.getAddress(userId, request.addressId());
         Cart cart = cartService.requireCart(userId);
@@ -99,11 +104,12 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderResponse findById(Long id) {
-        return toResponse(getById(id));
+        return toResponse(requireOwned(id));
     }
 
     @Transactional(readOnly = true)
     public List<OrderResponse> findByUser(Long userId) {
+        authGuard.requireUser(userId);
         customerService.getById(userId);
         return shopOrderRepository.findByCustomerIdOrderByIdDesc(userId).stream().map(this::toResponse).toList();
     }
@@ -134,12 +140,18 @@ public class OrderService {
     }
 
     private ShopOrder requirePendingPayment(Long orderId) {
-        ShopOrder order = getById(orderId);
+        ShopOrder order = requireOwned(orderId);
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new ConflictException(
                     "Order " + order.getOrderNo() + " cannot change; status is " + order.getStatus()
             );
         }
+        return order;
+    }
+
+    private ShopOrder requireOwned(Long orderId) {
+        ShopOrder order = getById(orderId);
+        authGuard.requireUser(order.getCustomer().getId());
         return order;
     }
 

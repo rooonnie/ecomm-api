@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -73,13 +74,16 @@ class CheckoutApiTest {
                                 """))
                 .andExpect(status().isOk());
 
-        long userId = id(mockMvc.perform(post("/api/users")
+        String registered = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"buyer@example.com\",\"name\":\"Test Buyer\"}"))
+                        .content("{\"email\":\"buyer@example.com\",\"name\":\"Test Buyer\",\"password\":\"password1\"}"))
                 .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString());
+                .andReturn().getResponse().getContentAsString();
+        long userId = id(registered);
+        String token = bearerToken(registered);
 
         long addressId = id(mockMvc.perform(post("/api/users/" + userId + "/addresses")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -93,6 +97,7 @@ class CheckoutApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         mockMvc.perform(post("/api/users/" + userId + "/cart/items")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"skuId\": %d, \"qty\": 150}".formatted(skuId)))
                 .andExpect(status().isOk())
@@ -100,6 +105,7 @@ class CheckoutApiTest {
                 .andExpect(jsonPath("$.items[0].unitPrice").value(1.1));
 
         long orderId = id(mockMvc.perform(post("/api/users/" + userId + "/checkout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"addressId\": %d}".formatted(addressId)))
                 .andExpect(status().isCreated())
@@ -114,7 +120,8 @@ class CheckoutApiTest {
                 .andExpect(jsonPath("$.qtyReserved").value(150))
                 .andExpect(jsonPath("$.qtyAvailable").value(100));
 
-        mockMvc.perform(post("/api/orders/" + orderId + "/pay"))
+        mockMvc.perform(post("/api/orders/" + orderId + "/pay")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PAID"))
                 .andExpect(jsonPath("$.payment.status").value("PAID"));
@@ -125,7 +132,8 @@ class CheckoutApiTest {
                 .andExpect(jsonPath("$.qtyReserved").value(0))
                 .andExpect(jsonPath("$.qtyAvailable").value(100));
 
-        mockMvc.perform(post("/api/orders/" + orderId + "/cancel"))
+        mockMvc.perform(post("/api/orders/" + orderId + "/cancel")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isConflict());
     }
 
@@ -182,13 +190,16 @@ class CheckoutApiTest {
                                 """))
                 .andExpect(status().isOk());
 
-        long userId = id(mockMvc.perform(post("/api/users")
+        String registered = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cancel-buyer@example.com\",\"name\":\"Cancel Buyer\"}"))
+                        .content("{\"email\":\"cancel-buyer@example.com\",\"name\":\"Cancel Buyer\",\"password\":\"password1\"}"))
                 .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString());
+                .andReturn().getResponse().getContentAsString();
+        long userId = id(registered);
+        String token = bearerToken(registered);
 
         long addressId = id(mockMvc.perform(post("/api/users/" + userId + "/addresses")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -202,18 +213,21 @@ class CheckoutApiTest {
                 .andReturn().getResponse().getContentAsString());
 
         mockMvc.perform(post("/api/users/" + userId + "/cart/items")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"skuId\": %d, \"qty\": 150}".formatted(skuId)))
                 .andExpect(status().isOk());
 
         long orderId = id(mockMvc.perform(post("/api/users/" + userId + "/checkout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"addressId\": %d}".formatted(addressId)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
                 .andReturn().getResponse().getContentAsString());
 
-        mockMvc.perform(post("/api/orders/" + orderId + "/cancel"))
+        mockMvc.perform(post("/api/orders/" + orderId + "/cancel")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"))
                 .andExpect(jsonPath("$.payment.status").value("CANCELLED"));
@@ -224,15 +238,22 @@ class CheckoutApiTest {
                 .andExpect(jsonPath("$.qtyReserved").value(0))
                 .andExpect(jsonPath("$.qtyAvailable").value(250));
 
-        mockMvc.perform(post("/api/orders/" + orderId + "/cancel"))
+        mockMvc.perform(post("/api/orders/" + orderId + "/cancel")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isConflict());
 
-        mockMvc.perform(post("/api/orders/" + orderId + "/pay"))
+        mockMvc.perform(post("/api/orders/" + orderId + "/pay")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isConflict());
     }
 
     private String getJson(String path) throws Exception {
         return mockMvc.perform(get(path)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+    }
+
+    private static String bearerToken(String json) {
+        int start = json.indexOf("\"token\":\"") + 9;
+        return json.substring(start, json.indexOf('"', start));
     }
 
     private static long id(String json) {

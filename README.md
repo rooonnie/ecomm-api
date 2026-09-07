@@ -50,6 +50,22 @@ Seeded on startup:
 
 Stock and price live on the SKU. Cut tape and full reel of the same part can have different qty and different price breaks.
 
+## Auth
+
+Cart, orders, and rereel jobs require a JWT. Catalog and inventory stay open for now.
+
+1. `POST /api/auth/register` with email, name, password (min 8 chars)
+2. Copy `token` from the response
+3. In Swagger click **Authorize**, paste the token (no `Bearer` prefix)
+4. Call cart / checkout / rereel
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | `/api/auth/register` | Create customer and return JWT |
+| POST | `/api/auth/login` | Login and return JWT |
+
+Old `POST /api/users` still creates a customer if you send a password, but it does not return a token. Use register, then login.
+
 ## Cart and orders
 
 Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is reserved on checkout, deducted when paid, and released if the unpaid order is cancelled.
