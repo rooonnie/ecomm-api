@@ -26,6 +26,21 @@ H2 console JDBC URL: `jdbc:h2:file:./data/ecomm-db`
 Username: `sa`  
 Password: (leave blank)
 
-## Step 1
+## Catalog API
 
-Scaffold only. Catalog tables (products, SKUs, packaging) come next.
+One **product** is the part (MPN). Each **SKU** is that part plus packaging (cut tape, tape and reel, mini-reel, etc.).
+
+Seeded on startup:
+
+- Packaging types: `CUT_TAPE`, `TAPE_AND_REEL`, `MINI_REEL`, `REREEL`, `TUBE`, `TRAY`, `BULK`
+- Category: Chip Resistors
+- Manufacturer: Yageo
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET/POST | `/api/packaging-types` | Packaging lookup |
+| GET/POST | `/api/categories` | Categories |
+| GET/POST | `/api/manufacturers` | Manufacturers |
+| GET/POST | `/api/products` | Electronic parts |
+| GET | `/api/products/{id}/skus` | SKUs for one part |
+| GET/POST | `/api/skus` | Sellable packaging SKUs |
