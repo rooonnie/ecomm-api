@@ -2,6 +2,8 @@ package com.rooonnie.ecomm.catalog;
 
 import com.rooonnie.ecomm.common.ConflictException;
 import com.rooonnie.ecomm.common.ResourceNotFoundException;
+import com.rooonnie.ecomm.inventory.Inventory;
+import com.rooonnie.ecomm.inventory.InventoryRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,15 +14,18 @@ public class SkuService {
     private final SkuRepository skuRepository;
     private final ProductService productService;
     private final PackagingTypeService packagingTypeService;
+    private final InventoryRepository inventoryRepository;
 
     public SkuService(
             SkuRepository skuRepository,
             ProductService productService,
-            PackagingTypeService packagingTypeService
+            PackagingTypeService packagingTypeService,
+            InventoryRepository inventoryRepository
     ) {
         this.skuRepository = skuRepository;
         this.productService = productService;
         this.packagingTypeService = packagingTypeService;
+        this.inventoryRepository = inventoryRepository;
     }
 
     @Transactional(readOnly = true)
@@ -53,10 +58,12 @@ public class SkuService {
         sku.setReelSize(request.reelSize());
         sku.setMoq(request.moq());
         sku.setStatus(request.status() == null ? SkuStatus.ACTIVE : request.status());
-        return SkuResponse.from(skuRepository.save(sku));
+        Sku saved = skuRepository.save(sku);
+        inventoryRepository.save(new Inventory(saved));
+        return SkuResponse.from(saved);
     }
 
-    private Sku getById(Long id) {
+    public Sku getById(Long id) {
         return skuRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SKU not found: " + id));
     }

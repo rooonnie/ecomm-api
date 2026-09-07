@@ -44,3 +44,8 @@ Seeded on startup:
 | GET/POST | `/api/products` | Electronic parts |
 | GET | `/api/products/{id}/skus` | SKUs for one part |
 | GET/POST | `/api/skus` | Sellable packaging SKUs |
+| GET/PUT | `/api/skus/{skuId}/inventory` | Stock per SKU |
+| GET/POST/PUT | `/api/skus/{skuId}/price-breaks` | Volume prices |
+| GET | `/api/skus/{skuId}/price-breaks/quote?qty=` | Unit price for a qty |
+
+Stock and price live on the SKU. Cut tape and full reel of the same part can have different qty and different price breaks.

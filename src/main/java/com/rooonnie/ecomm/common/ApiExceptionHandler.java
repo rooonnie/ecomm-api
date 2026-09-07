@@ -25,6 +25,12 @@ public class ApiExceptionHandler {
         return new ErrorResponse("CONFLICT", ex.getMessage());
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse badRequest(BadRequestException ex) {
+        return new ErrorResponse("BAD_REQUEST", ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse validation(MethodArgumentNotValidException ex) {
