@@ -10,27 +10,30 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductImageRepository productImageRepository;
     private final ManufacturerService manufacturerService;
     private final CategoryService categoryService;
 
     public ProductService(
             ProductRepository productRepository,
+            ProductImageRepository productImageRepository,
             ManufacturerService manufacturerService,
             CategoryService categoryService
     ) {
         this.productRepository = productRepository;
+        this.productImageRepository = productImageRepository;
         this.manufacturerService = manufacturerService;
         this.categoryService = categoryService;
     }
 
     @Transactional(readOnly = true)
     public List<ProductResponse> findAll() {
-        return productRepository.findAll().stream().map(ProductResponse::from).toList();
+        return productRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public ProductResponse findById(Long id) {
-        return ProductResponse.from(getById(id));
+        return toResponse(getById(id));
     }
 
     @Transactional
@@ -49,11 +52,18 @@ public class ProductService {
         product.setDescription(request.description());
         product.setPackageCase(request.packageCase());
         product.setLifecycle(request.lifecycle() == null ? ProductLifecycle.ACTIVE : request.lifecycle());
-        return ProductResponse.from(productRepository.save(product));
+        return toResponse(productRepository.save(product));
     }
 
     Product getById(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + id));
+    }
+
+    private ProductResponse toResponse(Product product) {
+        return ProductResponse.from(
+                product,
+                productImageRepository.findByProductIdOrderBySortOrderAscIdAsc(product.getId())
+        );
     }
 }

@@ -98,6 +98,39 @@ class CatalogApiTest {
         mockMvc.perform(get("/api/products/" + productId + "/skus"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
+
+        mockMvc.perform(post("/api/products/" + productId + "/images")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "url": "https://cdn.example.com/rc0603-front.jpg",
+                                  "altText": "0603 resistor front",
+                                  "sortOrder": 1
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.url").value("https://cdn.example.com/rc0603-front.jpg"));
+
+        mockMvc.perform(post("/api/products/" + productId + "/images")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "url": "https://cdn.example.com/rc0603-reel.jpg",
+                                  "sortOrder": 0
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/products/" + productId + "/images"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].url").value("https://cdn.example.com/rc0603-reel.jpg"))
+                .andExpect(jsonPath("$[1].url").value("https://cdn.example.com/rc0603-front.jpg"));
+
+        mockMvc.perform(get("/api/products/" + productId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.images.length()").value(2))
+                .andExpect(jsonPath("$.images[0].sortOrder").value(0));
     }
 
     private static long extractFirstId(String json) {

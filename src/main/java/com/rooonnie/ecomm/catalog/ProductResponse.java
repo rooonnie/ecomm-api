@@ -1,5 +1,7 @@
 package com.rooonnie.ecomm.catalog;
 
+import java.util.List;
+
 public record ProductResponse(
         Long id,
         String mpn,
@@ -10,10 +12,11 @@ public record ProductResponse(
         String name,
         String description,
         String packageCase,
-        ProductLifecycle lifecycle
+        ProductLifecycle lifecycle,
+        List<ProductImageResponse> images
 ) {
 
-    public static ProductResponse from(Product product) {
+    public static ProductResponse from(Product product, List<ProductImage> images) {
         return new ProductResponse(
                 product.getId(),
                 product.getMpn(),
@@ -24,7 +27,8 @@ public record ProductResponse(
                 product.getName(),
                 product.getDescription(),
                 product.getPackageCase(),
-                product.getLifecycle()
+                product.getLifecycle(),
+                images.stream().map(ProductImageResponse::from).toList()
         );
     }
 }

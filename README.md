@@ -43,6 +43,8 @@ Seeded on startup:
 | GET/POST | `/api/manufacturers` | Manufacturers |
 | GET/POST | `/api/products` | Electronic parts |
 | GET | `/api/products/{id}/skus` | SKUs for one part |
+| GET/POST | `/api/products/{id}/images` | Product photos (URL + sort order) |
+| DELETE | `/api/products/{id}/images/{imageId}` | Remove a product photo |
 | GET/POST | `/api/skus` | Sellable packaging SKUs |
 | GET/PUT | `/api/skus/{skuId}/inventory` | Stock per SKU |
 | GET/POST/PUT | `/api/skus/{skuId}/price-breaks` | Volume prices |
