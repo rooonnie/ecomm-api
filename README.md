@@ -75,14 +75,15 @@ Old `POST /api/users` still creates a customer if you send a password, but it do
 
 ## Cart and orders
 
-Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is reserved on checkout, deducted when paid, and released if the unpaid order is cancelled.
+Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is reserved on checkout, deducted when paid, and released if the unpaid order is cancelled. Posting the same SKU again replaces the cart qty instead of adding.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | POST/GET | `/api/users` | Create / get customer |
 | GET/POST | `/api/users/{id}/addresses` | Shipping addresses |
 | GET | `/api/users/{id}/cart` | Get or create cart |
-| POST | `/api/users/{id}/cart/items` | Add SKU + qty |
+| POST | `/api/users/{id}/cart/items` | Set SKU qty (creates or replaces the line) |
+| PUT | `/api/users/{id}/cart/items/{itemId}` | Replace line qty (0 removes it) |
 | DELETE | `/api/users/{id}/cart/items/{itemId}` | Remove cart line |
 | POST | `/api/users/{id}/checkout` | Create order, reserve stock |
 | GET | `/api/orders/{id}` | Get order |

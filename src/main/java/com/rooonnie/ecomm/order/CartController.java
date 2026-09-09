@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,9 +30,19 @@ public class CartController {
     }
 
     @PostMapping("/items")
-    @Operation(summary = "Add SKU to cart")
+    @Operation(summary = "Set SKU qty in cart")
     public CartResponse addItem(@PathVariable Long userId, @Valid @RequestBody CartItemRequest request) {
         return cartService.addItem(userId, request);
+    }
+
+    @PutMapping("/items/{itemId}")
+    @Operation(summary = "Replace cart item qty (0 removes it)")
+    public CartResponse setItemQty(
+            @PathVariable Long userId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody CartItemQtyRequest request
+    ) {
+        return cartService.setItemQty(userId, itemId, request);
     }
 
     @DeleteMapping("/items/{itemId}")

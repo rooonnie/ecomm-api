@@ -67,21 +67,33 @@ public class CartService {
                     cart.getItems().add(created);
                     return created;
                 });
-        int newQty = item.getQty() + request.qty();
-        validateLine(sku, newQty);
-        item.setQty(newQty);
+        validateLine(sku, request.qty());
+        item.setQty(request.qty());
         cartItemRepository.save(item);
+        return toResponse(cart);
+    }
+
+    @Transactional
+    public CartResponse setItemQty(Long userId, Long itemId, CartItemQtyRequest request) {
+        Cart cart = requireCart(userId);
+        CartItem item = requireItem(cart, itemId);
+        if (request.qty() == 0) {
+            cart.getItems().remove(item);
+            return toResponse(cart);
+        }
+        Sku sku = item.getSku();
+        if (sku.getStatus() != SkuStatus.ACTIVE) {
+            throw new BadRequestException("SKU is not active: " + sku.getSkuCode());
+        }
+        validateLine(sku, request.qty());
+        item.setQty(request.qty());
         return toResponse(cart);
     }
 
     @Transactional
     public CartResponse removeItem(Long userId, Long itemId) {
         Cart cart = requireCart(userId);
-        CartItem item = cart.getItems().stream()
-                .filter(row -> row.getId().equals(itemId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found: " + itemId));
-        cart.getItems().remove(item);
+        cart.getItems().remove(requireItem(cart, itemId));
         return toResponse(cart);
     }
 
@@ -93,6 +105,13 @@ public class CartService {
 
     void clear(Cart cart) {
         cart.getItems().clear();
+    }
+
+    private CartItem requireItem(Cart cart, Long itemId) {
+        return cart.getItems().stream()
+                .filter(row -> row.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found: " + itemId));
     }
 
     void validateLine(Sku sku, int qty) {
