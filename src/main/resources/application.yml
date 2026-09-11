@@ -36,3 +36,7 @@ ecomm:
     email: admin@ecomm.local
     password: adminpass1
     name: Admin
+  shipping:
+    domestic-country: PH
+    domestic-fee: 15.00
+    international-fee: 45.00

@@ -27,6 +27,7 @@ public class OrderService {
     private final CustomerService customerService;
     private final PriceBreakService priceBreakService;
     private final InventoryService inventoryService;
+    private final ShippingService shippingService;
     private final AuthGuard authGuard;
 
     public OrderService(
@@ -35,6 +36,7 @@ public class OrderService {
             CustomerService customerService,
             PriceBreakService priceBreakService,
             InventoryService inventoryService,
+            ShippingService shippingService,
             AuthGuard authGuard
     ) {
         this.shopOrderRepository = shopOrderRepository;
@@ -42,6 +44,7 @@ public class OrderService {
         this.customerService = customerService;
         this.priceBreakService = priceBreakService;
         this.inventoryService = inventoryService;
+        this.shippingService = shippingService;
         this.authGuard = authGuard;
     }
 
@@ -59,7 +62,7 @@ public class OrderService {
         order.setOrderNo("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         order.setCustomer(customer);
         order.setStatus(OrderStatus.PENDING_PAYMENT);
-        order.setShippingFee(BigDecimal.ZERO.setScale(4));
+        order.setShippingFee(shippingService.quote(address.getCountry()));
         order.setShippingLine1(address.getLine1());
         order.setShippingCity(address.getCity());
         order.setShippingCountry(address.getCountry());

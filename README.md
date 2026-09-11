@@ -75,7 +75,7 @@ Old `POST /api/users` still creates a customer if you send a password, but it do
 
 ## Cart and orders
 
-Checkout freezes SKU, packaging, qty, and unit price on the order line. Stock is reserved on checkout, deducted when paid, and released if the unpaid order is cancelled. Posting the same SKU again replaces the cart qty instead of adding.
+Checkout freezes SKU, packaging, qty, unit price, and a flat shipping fee on the order. PH addresses use the domestic fee; other countries use the international fee. Stock is reserved on checkout, deducted when paid, and released if the unpaid order is cancelled. Posting the same SKU again replaces the cart qty instead of adding.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
